@@ -1,0 +1,129 @@
+{
+	"name": "convertCSV_to_parquet",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "spark0pool",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "df530cc4-7d22-4f12-a4c8-f1569d4e2c27"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/3be818dd-4e75-49d6-b51d-1c75478af8d1/resourceGroups/001Book/providers/Microsoft.Synapse/workspaces/my0workspace0v1/bigDataPools/spark0pool",
+				"name": "spark0pool",
+				"type": "Spark",
+				"endpoint": "https://my0workspace0v1.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/spark0pool",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.4",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"source": [
+					"df = spark.read.option(\"header\",\"true\").csv(\"abfss://data@datalake0gen2.dfs.core.windows.net/SessionCSV/ClassicalMusic/POW/csharpguitar-brainjammer-pow-ClassicalMusic-2140.csv\")\n",
+					"\n",
+					""
+				],
+				"execution_count": 9
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"\n",
+					"headers = spark.createDataFrame([(\"Timestamp\", \"Timestamp\"),\n",
+					" (\"AF3theta\", \"AF3/theta\"), (\"AF3alpha\", \"AF3/alpha\"), (\"AF3betaL\", \"AF3/betaL\"),\n",
+					" (\"AF3betaH\", \"AF3/betaH\"), (\"AF3gamma\", \"AF3/gamma\"), (\"T7theta\", \"T7/theta\"),\n",
+					" (\"T7alpha\", \"T7/alpha\"), (\"T7betaL\", \"T7/betaL\"), (\"T7betaH\", \"T7/betaH\"),\n",
+					" (\"T7gamma\", \"T7/gamma\"), (\"Pztheta\", \"Pz/theta\"), (\"Pzalpha\", \"Pz/alpha\"),\n",
+					" (\"PzbetaL\", \"Pz/betaL\"), (\"PzbetaH\", \"Pz/betaH\"), (\"Pzgamma\", \"Pz/gamma\"),\n",
+					" (\"T8theta\", \"T8/theta\"), (\"T8alpha\", \"T8/alpha\"), (\"T8betaL\", \"T8/betaL\"),\n",
+					" (\"T8betaH\", \"T8/betaH\"), (\"T8gamma\", \"T8/gamma\"), (\"AF4theta\", \"AF4/theta\"),\n",
+					" (\"AF4alpha\", \"AF4/alpha\"), (\"AF4betaL\", \"AF4/betaL\"), (\"AF4betaH\", \"AF4/betaH\"),\n",
+					" (\"AF4/gamma\", \"AF4/gamma\")],['newHeader','oldHeader'])\n",
+					"\n",
+					"newHeaders = headers.sort('oldHeader').select('newHeader').rdd.flatMap(lambda x: x).collect()\n",
+					"dfh = df.toDF(*newHeaders)"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"dfh.write.mode(\"overwrite\").parquet(\"brainjammer-0900.parquet\")\n",
+					"dfp = spark.read.parquet(\"brainjammer-0900.parquet\")\n",
+					"dfp.select(\"*\").show(5)"
+				]
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				]
+			}
+		]
+	}
+}
